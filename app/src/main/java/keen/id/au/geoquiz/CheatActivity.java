@@ -14,10 +14,12 @@ public class CheatActivity extends Activity {
 
     protected static final String EXTRA_ANSWER_IS_TRUE = "au.id.keen.geoquiz.answer_is_true";
     protected static final String EXTRA_ANSWER_SHOWN = "au.id.keen.geoquiz.answer_shown";
+    private static final String KEY_ANSWER_SHOWN = "answer_show";
 
     private Button mShowAnswerButton;
     private TextView mAnswerTextView;
     private boolean mAnswerIsTrue;
+    private boolean mAnswerWasShown;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,12 +27,16 @@ public class CheatActivity extends Activity {
         setContentView(R.layout.activity_cheat);
 
         mAnswerIsTrue = getIntent().getBooleanExtra(EXTRA_ANSWER_IS_TRUE, false);
-        setAnswerShownResult(false);
+        if (null != savedInstanceState) {
+            mAnswerWasShown = savedInstanceState.getBoolean(KEY_ANSWER_SHOWN, false);
+        }
+        setAnswerShownResult(mAnswerWasShown);
 
         mShowAnswerButton = (Button) findViewById(R.id.showAnswerButton);
         mShowAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mAnswerWasShown = true;
                 if (mAnswerIsTrue) {
                     mAnswerTextView.setText(R.string.true_button);
                 } else {
@@ -41,6 +47,12 @@ public class CheatActivity extends Activity {
         });
         mAnswerTextView = (TextView) findViewById(R.id.answerTextView);
 
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_ANSWER_SHOWN, mAnswerWasShown);
     }
 
     private void setAnswerShownResult(boolean isAnswerShown) {

@@ -12,11 +12,15 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
+
 
 public class QuizActivity extends Activity {
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
+    private static final String KEY_CHEAT_ARRAY = "cheat_array";
+
 
     private Button mTrueButton;
     private Button mFalseButton;
@@ -24,7 +28,7 @@ public class QuizActivity extends Activity {
     private ImageButton mNextButton;
     private ImageButton mPreviousButton;
     private TextView mQuestionTextView;
-    private boolean mIsCheater;
+    private boolean[] mCheatArray;
 
     private int mCurrentIndex = 0;
     private TrueFalse[] mQuestionBank = new TrueFalse[] {
@@ -59,7 +63,6 @@ public class QuizActivity extends Activity {
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mIsCheater = false;
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
                 updateQuestion();
             }
@@ -68,7 +71,6 @@ public class QuizActivity extends Activity {
         mPreviousButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mIsCheater = false;
                 if (mCurrentIndex - 1 < 0) { mCurrentIndex = mQuestionBank.length - 1; }
                 else { mCurrentIndex--; }
                 updateQuestion();
@@ -95,6 +97,7 @@ public class QuizActivity extends Activity {
         });
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            mCheatArray = savedInstanceState.getBooleanArray(KEY_CHEAT_ARRAY);
         }
         updateQuestion();
     }
@@ -104,6 +107,7 @@ public class QuizActivity extends Activity {
         super.onSaveInstanceState(outState);
         Log.i(TAG, "onSaveInstanceState(Bundle) called");
         outState.putInt(KEY_INDEX, mCurrentIndex);
+        outState.putBooleanArray(KEY_CHEAT_ARRAY, mCheatArray);
     }
 
     private void updateQuestion() {
@@ -112,7 +116,7 @@ public class QuizActivity extends Activity {
     }
 
     private void checkAnswer(boolean pressedTrue) {
-        if (mIsCheater) {
+        if (mCheatArray[mCurrentIndex]) {
             Toast.makeText(QuizActivity.this,
                     R.string.judgment_toast,
                     Toast.LENGTH_SHORT).show();
@@ -136,7 +140,14 @@ public class QuizActivity extends Activity {
         if (data == null) {
             return;
         }
-        mIsCheater = data.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false);
+        boolean cheated = data.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false);
+        if (mCheatArray == null) {
+            mCheatArray = new boolean[mQuestionBank.length];
+        }
+        // if the goes into cheat activity a second time, do not clear his first cheat
+        if (cheated) {
+            mCheatArray[mCurrentIndex] = cheated;
+        }
     }
 
     @Override
